@@ -1,28 +1,22 @@
 package com.example.firstapp
 
-import android.content.Intent
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.os.Message
 import android.util.Log
 import android.view.View
-import android.widget.EditText
-import android.widget.Toast
+import android.widget.ArrayAdapter
+import android.widget.ListView
+import androidx.appcompat.app.AppCompatActivity
 import com.google.android.gms.tasks.OnCompleteListener
-import com.google.firebase.database.DataSnapshot
-import com.google.firebase.database.DatabaseReference
-import com.google.firebase.database.FirebaseDatabase
-import com.google.firebase.database.ValueEventListener
 import com.google.firebase.iid.FirebaseInstanceId
+import java.util.*
 
 
 const val EXTRA_MESSAGE = "com.example.firstapp.MESSAGE"
-
 class MainActivity : AppCompatActivity() {
-    private var mDatabase: DatabaseReference? = null
-    private var mMessageReference: DatabaseReference? = null
     val TAG="Service"
-
+    companion object {
+        var msgs: Queue<String> = LinkedList<String>(listOf(" ", " ", " ", " ", " "," "," "," "," "," "))
+    }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -32,25 +26,25 @@ class MainActivity : AppCompatActivity() {
                     Log.w(TAG, "getInstanceId failed", task.exception)
                     return@OnCompleteListener
                 }
-
                 // Get new Instance ID token
                 val token = task.result?.token
-
-                // Log and toast
-//                val msg = getString(R.string.msg_token_fmt, token)
                 Log.d(TAG, token)
             })
-    }
-
-    fun sendMessage(view : View) {
-        val editText = findViewById<EditText>(R.id.editText)
-        val message = editText.text.toString()
-        mDatabase = FirebaseDatabase.getInstance().reference
-        mMessageReference = FirebaseDatabase.getInstance().getReference("message")
-        mMessageReference!!.setValue(message)
-        val intent = Intent(this, DisplayMessageActivity::class.java).apply {
-            putExtra(EXTRA_MESSAGE, message)
+        val listView = findViewById<ListView>(R.id.listView)
+        val listItems = arrayOfNulls<String>(10)
+        val message = intent.getStringExtra("SendToQueue")
+        if(message != null) {
+            Log.d("RcvdMsg", message)
+            msgs.add(message)
+            msgs.remove()
         }
-        startActivity(intent)
+        var i = listItems.size - 1
+        for (msg in msgs) {
+            listItems[i] = msg
+            Log.d("Queue", msg)
+            i -= 1
+        }
+        val adapter = ArrayAdapter(this, android.R.layout.simple_list_item_1, listItems)
+        listView.adapter = adapter
     }
 }
